@@ -24,7 +24,7 @@ function getThread(guild, id) {
 }
 
 client.on('messageCreate', async (message) => {
-    if(message.content.startsWith(process.env.PREFIX+process.env.COMMAND)) {
+    if(message.content.toLowerCase().startsWith(process.env.PREFIX+process.env.COMMAND)) {
         if(hasRole(message.member, process.env.ADMIN_ROLE)) {
             var args = message.content.toLowerCase().replace(process.env.PREFIX+process.env.COMMAND+" ", "").split(" ")
             if(args[0] == "add") {
@@ -102,20 +102,21 @@ client.on('messageCreate', async (message) => {
                         };
                         if(messages) {
                             let map = new Map();
-                            let total = 0;
                             for(var i of messages) {
                                 for(b of i) {
-                                    total++;
                                     id = b[1].author.id;
                                     message = b[1].content.split(" ");
+                                    channel = b[1].channelId;
                                     data = map.get(id);
                                     if(message.length >= args[2]) {
                                         if(data) {
-                                            data++;
-                                            map.delete(id);
-                                            map.set(id, data);
+                                            if(data.indexOf(channel) < 0) {
+                                                data.push(channel)
+                                                map.delete(id);
+                                                map.set(id, data);
+                                            }
                                         } else {
-                                            map.set(id, 1);
+                                            map.set(id, [channel]);
                                         };
                                     }
                                 };
@@ -124,7 +125,8 @@ client.on('messageCreate', async (message) => {
                                 status.edit(":green_circle: Processing Data :green_circle:")
                                 let passing = [];
                                 for (var i of map) {
-                                    if((i[1]/total)*100 >= args[1]) {
+                                    console.log((i[1].length/threads.length)*100);
+                                    if((i[1].length/threads.length)*100 >= args[1]) {
                                         passing.push(i[0]);
                                     };
                                 };
@@ -134,11 +136,10 @@ client.on('messageCreate', async (message) => {
                                         member = guild.members.cache.get(i);
                                         role = guild.roles.cache.find(role => role.id === process.env.REWARD_ROLE);
                                         member.roles.add(role);
-                                        status.edit(":green_circle: Data Processed Successfully :green_circle:")
                                     } catch(e) {
-                                        console.log(e)
                                     };
                                 }
+                                status.edit(":green_circle: Data Processed Successfully :green_circle:")
                             }
                         } else {
                             status.edit(":red_circle: Gathering Data Failed :red_circle:")
