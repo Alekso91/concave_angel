@@ -1,6 +1,7 @@
 const { Client, Intents } = require('discord.js');
 const client = new Client({ intents: [Intents.FLAGS.GUILD_MEMBERS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILDS] });
 const threads = [];
+const idList = [];
 const users = [];
 require('dotenv').config()
 
@@ -21,6 +22,10 @@ function getThread(guild, id) {
         return thread
     };
     return null
+}
+
+function addrole() {
+
 }
 
 client.on('messageCreate', async (message) => {
@@ -73,6 +78,28 @@ client.on('messageCreate', async (message) => {
                     })
                 }
                 message.channel.send(constructor.replace("{text}", text))
+            } else if(args[0] == "adduser") {
+                ids = args[1].replace("```", "").replace("```", "").split("\n");
+                total = 0;
+                valid = 0;
+                //getting threads
+                ids.forEach(e => {
+                    if(e!=""){
+                        total++;
+                        idList.push(e);
+                    }
+                });
+                message.channel.send(+total+" users were added");
+            } else if(args[0] == "giverole") {
+                const guild = client.guilds.cache.get(process.env.SERVER_ID);
+                role = guild.roles.cache.get(process.env.REWARD_ROLE);
+                for (let id of idList) {
+                    message.guild.members.fetch(id)
+                    .then(member => {
+                       member.roles.add(role);
+                       console.log("role added to ", member.user.username);
+                    })
+                }
             } else if(args[0] == "top") {
                 msg2 = message;
                 //args[1] = % requirement | args[2] = word requirement
